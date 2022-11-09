@@ -37,25 +37,25 @@ public class TestCompositeChaincode implements ContractInterface {
         }
 
         @Transaction(intent = Transaction.TYPE.EVALUATE)
-        public String getObject(Context ctx, String object) {
+        public List<AssetResponse> getObject(Context ctx, String object) {
                 CompositeKey key = ctx.getStub().createCompositeKey(object);
                 QueryResultsIterator<KeyValue> results = ctx.getStub().getStateByPartialCompositeKey(key);
                 List<AssetResponse> list = new ArrayList<>();
                 for (KeyValue result : results) {
                         list.add(new AssetResponse(result.getKey(), result.getStringValue()));
                 }
-                return genson.serialize(list);
+                return list;
         }
 
         @Transaction(intent = Transaction.TYPE.EVALUATE)
-        public String getObjectAndKey(Context ctx, String object, String key) {
+        public List<AssetResponse> getObjectAndKey(Context ctx, String object, String key) {
                 CompositeKey compositeKey = ctx.getStub().createCompositeKey(object, key);
                 QueryResultsIterator<KeyValue> results = ctx.getStub().getStateByPartialCompositeKey(compositeKey);
                 List<AssetResponse> list = new ArrayList<>();
                 for (KeyValue result : results) {
                         list.add(new AssetResponse(result.getKey(), result.getStringValue()));
                 }
-                return genson.serialize(list);
+                return list;
         }
 
         @Transaction(intent = Transaction.TYPE.SUBMIT)
