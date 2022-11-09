@@ -25,15 +25,21 @@ public class TestCompositeChaincode implements ContractInterface {
 
         @Transaction(intent = Transaction.TYPE.SUBMIT)
         public void init(Context ctx) {
-                ctx.getStub().putState("a_1", "value1".getBytes());
-                ctx.getStub().putState("a_2", "value2".getBytes());
-                ctx.getStub().putState("b_1", "value3".getBytes());
-                ctx.getStub().putState("b_2", "value4".getBytes());
+                String key = ctx.getStub().createCompositeKey("a", "key1").toString();
+                ctx.getStub().putState(key, "value1".getBytes());
+                key = ctx.getStub().createCompositeKey("a", "key2").toString();
+                ctx.getStub().putState(key, "value2".getBytes());
+
+                key = ctx.getStub().createCompositeKey("b", "key1").toString();
+                ctx.getStub().putState(key, "value1".getBytes());
+                key = ctx.getStub().createCompositeKey("b", "key2").toString();
+                ctx.getStub().putState(key, "value2".getBytes());
         }
 
         @Transaction(intent = Transaction.TYPE.EVALUATE)
-        public String getRange(Context ctx, String start, String end) {
-                QueryResultsIterator<KeyValue> results = ctx.getStub().getStateByRange(start, end);
+        public String getObject(Context ctx, String object) {
+                CompositeKey key = ctx.getStub().createCompositeKey(object);
+                QueryResultsIterator<KeyValue> results = ctx.getStub().getStateByPartialCompositeKey(key);
                 List<AssetResponse> list = new ArrayList<>();
                 for (KeyValue result : results) {
                         list.add(new AssetResponse(result.getKey(), result.getStringValue()));
@@ -42,13 +48,19 @@ public class TestCompositeChaincode implements ContractInterface {
         }
 
         @Transaction(intent = Transaction.TYPE.EVALUATE)
-        public AssetResponse get(Context ctx, String key) {
-                byte[] value = ctx.getStub().getState(key);
-                return new AssetResponse(key, new String(value));
+        public String getObjectAndKey(Context ctx, String object, String key) {
+                CompositeKey compositeKey = ctx.getStub().createCompositeKey(object, key);
+                QueryResultsIterator<KeyValue> results = ctx.getStub().getStateByPartialCompositeKey(compositeKey);
+                List<AssetResponse> list = new ArrayList<>();
+                for (KeyValue result : results) {
+                        list.add(new AssetResponse(result.getKey(), result.getStringValue()));
+                }
+                return genson.serialize(list);
         }
 
         @Transaction(intent = Transaction.TYPE.SUBMIT)
-        public void put(Context ctx, String key, String value) {
-                ctx.getStub().putState(key, value.getBytes());
+        public void putObjectAndKey(Context ctx, String object, String key, String value) {
+                CompositeKey compositeKey = ctx.getStub().createCompositeKey(object, key);
+                ctx.getStub().putState(compositeKey.toString(), value.getBytes());
         }
 }
