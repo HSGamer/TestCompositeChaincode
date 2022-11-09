@@ -8,6 +8,7 @@ import org.hyperledger.fabric.contract.annotation.Default;
 import org.hyperledger.fabric.contract.annotation.Info;
 import org.hyperledger.fabric.contract.annotation.Transaction;
 import org.hyperledger.fabric.shim.ledger.CompositeKey;
+import org.hyperledger.fabric.shim.ledger.KeyModification;
 import org.hyperledger.fabric.shim.ledger.KeyValue;
 import org.hyperledger.fabric.shim.ledger.QueryResultsIterator;
 
@@ -37,25 +38,36 @@ public class TestCompositeChaincode implements ContractInterface {
         }
 
         @Transaction(intent = Transaction.TYPE.EVALUATE)
-        public List<AssetResponse> getObject(Context ctx, String object) {
+        public String getObject(Context ctx, String object) {
                 CompositeKey key = ctx.getStub().createCompositeKey(object);
                 QueryResultsIterator<KeyValue> results = ctx.getStub().getStateByPartialCompositeKey(key);
                 List<AssetResponse> list = new ArrayList<>();
                 for (KeyValue result : results) {
                         list.add(new AssetResponse(result.getKey(), result.getStringValue()));
                 }
-                return list;
+                return genson.serialize(list);
         }
 
         @Transaction(intent = Transaction.TYPE.EVALUATE)
-        public List<AssetResponse> getObjectAndKey(Context ctx, String object, String key) {
+        public String getObjectAndKey(Context ctx, String object, String key) {
                 CompositeKey compositeKey = ctx.getStub().createCompositeKey(object, key);
                 QueryResultsIterator<KeyValue> results = ctx.getStub().getStateByPartialCompositeKey(compositeKey);
                 List<AssetResponse> list = new ArrayList<>();
                 for (KeyValue result : results) {
                         list.add(new AssetResponse(result.getKey(), result.getStringValue()));
                 }
-                return list;
+                return genson.serialize(list);
+        }
+
+        @Transaction(intent = Transaction.TYPE.EVALUATE)
+        public String getHistory(Context ctx, String object, String key) {
+                CompositeKey compositeKey = ctx.getStub().createCompositeKey(object, key);
+                QueryResultsIterator<KeyModification> results = ctx.getStub().getHistoryForKey(compositeKey.toString());
+                List<AssetResponse> list = new ArrayList<>();
+                for (KeyModification result : results) {
+                        list.add(new AssetResponse(result.getTimestamp().toString(), result.getStringValue()));
+                }
+                return genson.serialize(list);
         }
 
         @Transaction(intent = Transaction.TYPE.SUBMIT)
